@@ -1,0 +1,30 @@
+﻿@inject IJSRuntime Js
+
+<h3>@_result</h3>
+
+@code {
+
+    [Parameter, EditorRequired]
+    public string? Str { get; set; }
+
+    private string? _result;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _result = await GetTestBytes(Str);
+
+            StateHasChanged();
+        }
+    }
+
+    private async ValueTask<string> GetTestBytes(string str)
+    {
+        var dataReference = await Js.InvokeAsync<IJSStreamReference>("window.getTestBytes", str);
+        await using var dataReferenceStream = await dataReference.OpenReadStreamAsync();
+        using var reader = new StreamReader(dataReferenceStream);
+        return await reader.ReadToEndAsync();
+    }
+
+}
